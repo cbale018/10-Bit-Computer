@@ -12,18 +12,21 @@ module fetch_unit(
     input [9:0] ra_addr,        //return address
     input [9:0] jump_addr,      //jump address
     input [9:0] t0,             //t0 register
-    output [9:0] instr_rd_addr,  //instruction memory read address
-    output reg [9:0] pcval             //program counter
+    input jump_control,
+    output reg [9:0] instr_rd_addr,  //instruction memory read address
+    output pcval             //program counter
     );
     
     reg [9:0] add_a, add_b;  
     reg [9:0] realjmp_addr;
-    wire [9:0] add_output;
+    wire [9:0] add_output, instr_rd_addr;
+    reg [9:0] pcval;
     
     initial begin
-        add_a = 10'h000;
+        add_a = 10'h20;
         add_b = 10'h000;
         realjmp_addr = 10'h000;
+        pcval = 10'd20;//Change to Run Different Program
     end
     
     //10bit adder
@@ -42,17 +45,23 @@ module fetch_unit(
     .wen(1'b1),
     .q(instr_rd_addr));
     
-    always @(clk, t0, jump_addr) begin
-        if(t0 == 0) begin
-        realjmp_addr = 10'h001;
-        end
+    always @(jump_addr,t0, jump_control) begin
+    if(jump_control == 0) begin
+        if(t0 != 1) begin
+            realjmp_addr = 10'h001;
+            end
         else begin
+            realjmp_addr = jump_addr;
+            end
+        end
+        else
+        begin
         realjmp_addr = jump_addr;
         end
     end
     
     //fetch operation selection
-     always @(clk, fetch_control,instr_rd_addr,jump_addr,ra_addr) begin
+     always @(fetch_control,instr_rd_addr,realjmp_addr,ra_addr) begin
           case (fetch_control)
              2'b00 : begin                     //Normal
                        add_a = instr_rd_addr;   
@@ -64,7 +73,7 @@ module fetch_unit(
                      end
              2'b10 : begin                     //Return
                        add_a = ra_addr;        
-                       add_b = 10'd0;  
+                       add_b = 10'd1;  
                      end
              2'b11 : begin                     //(reserved)
                        add_a = instr_rd_addr;        
@@ -76,8 +85,8 @@ module fetch_unit(
                      end
              endcase  
              
-             pcval = instr_rd_addr;                             
-         end                         
-    
-                         
+           pcval = instr_rd_addr;
+
+           
+           end                               
 endmodule

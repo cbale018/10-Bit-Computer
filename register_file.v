@@ -11,27 +11,25 @@ module register_file(
     input [2:0] write_reg,      //wrie address
     input [9:0] write_data,     //write 
     input reg_write_en,         //write enable
-    input clk_in,                  //clock
+    input clk,                  //clock
     input reset,                //reset
     input ldst_en,
     output reg [9:0] reg1_out,  //read data1
     output reg [9:0] reg2_out,   //read data2
     output reg [9:0] t0out,     //t0output
-    output reg [9:0] ra_out      //return address
+    output reg [9:0] ra_out,      //return address
+    output reg [9:0] t1out      //t1out
     );
     
     wire [9:0] reg_s0, reg_s1,reg_s2, reg_s3, reg_t0, reg_t1, reg_ra, reg_sp;
-    reg [7:0] reg_en;
-    reg clk;
-    
+    wire [7:0] reg_en;
     
     initial begin
-        clk = 0;
-        reg_en = 8'b0;
-    end
-    
-    always #1.25 begin
-        clk = ~clk;
+        reg1_out = 0;
+        reg2_out = 0;
+        t0out  = 0;
+        ra_out  = 0;
+        t1out = 0;
     end
     
     //10bit register units
@@ -91,29 +89,16 @@ module register_file(
     .wen(reg_en[7]),
     .q(reg_sp));    
     
-    always @(clk) begin  //outputs the value of t0 reg
+    always @(reg_t0,reg_ra, reg_t1) begin  //outputs the value of t0 reg
         t0out = reg_t0;
         ra_out = reg_ra;
+        t1out = reg_t1;
     end   
    
    
    //generate write enable signals 
-   always @(write_reg,reg_write_en) begin
-       reg_en = 8'b0;
-       case (write_reg)                  
-        0:    reg_en = 8'b00000001;    
-        1:    reg_en = 8'b00000010;    
-        2:    reg_en = 8'b00000100;    
-        3:    reg_en = 8'b00001000;     
-        4:    reg_en = 8'b00010000;     
-        5:    reg_en = 8'b00100000;        
-        6:    reg_en = 8'b01000000;        
-        7:    reg_en = 8'b10000000;                           
-     endcase
-     if (reg_write_en == 0) begin
-        reg_en = 0;
-     end
-   end
+   Three2EightDecoder D0(write_reg, reg_write_en, reg_en);
+
     
    //output1 selection  
    always @(read_reg1,reg_s0, reg_s1,reg_s2, reg_s3, reg_t0, reg_t1, reg_ra, reg_sp) begin

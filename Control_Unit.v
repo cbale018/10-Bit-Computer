@@ -1,22 +1,8 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 03/10/2018 02:41:37 AM
-// Design Name: 
-// Module Name: Control_Unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Author: AD
+// Module Name: comtrol_unit
+// Project Name: ECE3570 Lab3b
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -32,15 +18,22 @@ module Control_Unit(
     output reg [2:0] read_reg1, 
     output reg [2:0] read_reg2, 
     output reg [2:0] wr_reg,
-    output reg ldst_en);
+    output reg [1:0] ldst_en,
+    output reg jump_control);
+        
+        initial begin
+               done = 0;
+        end
         
         always @(instr) begin
-        ldst_en = 0;
+        ldst_en = 2'h0;
         wr_en = 0;
         writeval_op = 2'b00;
         done = 0;
         fetch_op = 2'd0;
         alu_op = 2'b00;
+        jump_control = 0;
+        
         case(instr[9:8])
         
         0: begin
@@ -78,10 +71,10 @@ module Control_Unit(
                 1: begin 
                     wr_reg = 3'd5;   //$t1
                     wr_en = 1;
-                    ldst_en = 1;
+                    ldst_en = 2'b10;
                    end
                 2: begin 
-                    ldst_en = 1;
+                    ldst_en = 2'b11;
                     alu_op = 0;
                    end
                 3: fetch_op = 2'd2;
@@ -97,9 +90,10 @@ module Control_Unit(
             
         3: begin
             case (instr[7:6])
-                0: fetch_op = 3'd1;
+                0: begin fetch_op = 3'd1; jump_control = 1; end
                 1: fetch_op = 3'd1;
                 2: begin 
+                    jump_control = 1;
                     fetch_op = 3'd1;
                     wr_reg = 3'd6; //$ra
                     wr_en = 1;
@@ -115,6 +109,7 @@ module Control_Unit(
         default : begin 
                     wr_en = 0;
                     alu_op = 2'd0;
+                    wr_reg = 3'd5;
                   end
         endcase
         end

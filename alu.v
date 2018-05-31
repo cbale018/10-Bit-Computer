@@ -12,7 +12,7 @@ module alu(
     input [9:0] pcvalue,        //program counter value
     input [9:0] imm_val,
     input [1:0] writeval_op,          
-    output reg [9:0] dataout    //output data
+    output reg [9:0] alu_out    //output data
     );
     
     reg [9:0] data_eq, data_lt;
@@ -44,31 +44,31 @@ module alu(
     end
     
     //alu operation selection
-    always @(data_adder,data_eq,data_lt,alu_operation, writeval_op, imm_val, pcvalue) begin
+    always @(data_adder,data_eq,data_lt,alu_operation, writeval_op, imm_val, pcvalue, datain_b) begin
         case (alu_operation)
             2'b00 : begin                       //add
                     add_subn = 1;
-                    dataout = data_adder[9:0];
+                    alu_out = data_adder[9:0];
                     end
             2'b01 : begin                       //subtract
                     add_subn = 0;
-                    dataout = data_adder[9:0];
+                    alu_out = data_adder[9:0];
                     end
             2'b10 : begin                       //equal
                     add_subn = 0;
-                    dataout = data_eq;
+                    alu_out = data_eq;
                     end
             2'b11 : begin                       //less than
                     add_subn = 0;
-                    dataout = data_lt;
+                    alu_out = data_lt;
                     end
             default : ;
         endcase     
         
         case(writeval_op)
-                    2'b01: dataout = pcvalue;
-                    2'b10: dataout = imm_val;
-                    2'b11: dataout = datain_b;
+                    2'b01: alu_out = pcvalue;
+                    2'b10: alu_out = imm_val;
+                    2'b11: alu_out = datain_b;
         endcase  
     end   
     
