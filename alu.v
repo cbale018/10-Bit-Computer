@@ -9,6 +9,9 @@ module alu(
     input [9:0] datain_a,       //input data a
     input [9:0] datain_b,       //input data b
     input [1:0] alu_operation,  //alu operation selection
+    input [9:0] pcvalue,        //program counter value
+    input [9:0] imm_val,
+    input [1:0] writeval_op,          
     output reg [9:0] dataout    //output data
     );
     
@@ -30,8 +33,18 @@ module alu(
         data_a = {datain_a[9],datain_a};
     end
     
+    initial begin
+        data_eq = 0;
+        data_lt = 0;
+        data_a = 0; 
+        data_b = 0; 
+        data_out = 0;
+        add_subn = 0;
+        adder_cin = 0;
+    end
+    
     //alu operation selection
-    always @(data_adder,data_eq,data_lt,alu_operation) begin
+    always @(data_adder,data_eq,data_lt,alu_operation, writeval_op, imm_val, pcvalue) begin
         case (alu_operation)
             2'b00 : begin                       //add
                     add_subn = 1;
@@ -50,8 +63,15 @@ module alu(
                     dataout = data_lt;
                     end
             default : ;
-        endcase        
+        endcase     
+        
+        case(writeval_op)
+                    2'b01: dataout = pcvalue;
+                    2'b10: dataout = imm_val;
+                    2'b11: dataout = datain_b;
+        endcase  
     end   
+    
     
     //add and subtract selection
     always @(add_subn,datain_b) begin

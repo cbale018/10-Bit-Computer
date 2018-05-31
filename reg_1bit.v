@@ -12,6 +12,11 @@ module reg_1bit(
     input wen,
     output reg q
     );
+    
+    initial begin
+        q = 1'b0;
+    end
+    
      always @(posedge clk) begin
         if(rst == 1)
             q = 0;

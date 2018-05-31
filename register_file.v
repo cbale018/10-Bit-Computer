@@ -9,96 +9,110 @@ module register_file(
     input [2:0] read_reg1,      //read address1
     input [2:0] read_reg2,      //read address2
     input [2:0] write_reg,      //wrie address
-    input [9:0] write_data,     //write data
+    input [9:0] write_data,     //write 
     input reg_write_en,         //write enable
-    input clk,                  //clock
+    input clk_in,                  //clock
     input reset,                //reset
+    input ldst_en,
     output reg [9:0] reg1_out,  //read data1
-    output reg [9:0] reg2_out   //read data2
+    output reg [9:0] reg2_out,   //read data2
+    output reg [9:0] t0out,     //t0output
+    output reg [9:0] ra_out      //return address
     );
     
     wire [9:0] reg_s0, reg_s1,reg_s2, reg_s3, reg_t0, reg_t1, reg_ra, reg_sp;
-    reg reg_s0_wr_en,reg_s1_wr_en,reg_s2_wr_en,reg_s3_wr_en,
-         reg_t0_wr_en,reg_t1_wr_en,reg_ra_wr_en,reg_sp_wr_en;
+    reg [7:0] reg_en;
+    reg clk;
+    
+    
+    initial begin
+        clk = 0;
+        reg_en = 8'b0;
+    end
+    
+    always #1.25 begin
+        clk = ~clk;
+    end
     
     //10bit register units
     reg_10bits s0(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_s0_wr_en),
+    .wen(reg_en[0]),
     .q(reg_s0));
     
     reg_10bits s1(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_s1_wr_en),
+    .wen(reg_en[1]),
     .q(reg_s1));    
     
      reg_10bits s2(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_s2_wr_en),
+    .wen(reg_en[2]),
     .q(reg_s2));
     
     reg_10bits s3(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_s3_wr_en),
+    .wen(reg_en[3]),
     .q(reg_s3));    
  
      reg_10bits t0(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_t0_wr_en),
+    .wen(reg_en[4]),
     .q(reg_t0));
     
     reg_10bits t1(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_t1_wr_en),
+    .wen(reg_en[5]),
     .q(reg_t1));    
     
      reg_10bits ra(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_ra_wr_en),
+    .wen(reg_en[6]),
     .q(reg_ra));
     
     reg_10bits sp(
     .d(write_data),
     .clk(clk),
     .rst(reset),
-    .wen(reg_sp_wr_en),
-    .q(reg_sp));       
+    .wen(reg_en[7]),
+    .q(reg_sp));    
+    
+    always @(clk) begin  //outputs the value of t0 reg
+        t0out = reg_t0;
+        ra_out = reg_ra;
+    end   
+   
    
    //generate write enable signals 
    always @(write_reg,reg_write_en) begin
-        reg_s0_wr_en = 0;
-        reg_s1_wr_en = 0;
-        reg_s2_wr_en = 0;
-        reg_s3_wr_en = 0;
-        reg_t0_wr_en = 0;
-        reg_t1_wr_en = 0;
-        reg_ra_wr_en = 0;
-        reg_sp_wr_en = 0; 
+       reg_en = 8'b0;
        case (write_reg)                  
-        0:   reg_s0_wr_en = reg_write_en;      
-        1:   reg_s1_wr_en = reg_write_en;      
-        2:   reg_s2_wr_en = reg_write_en;      
-        3:   reg_s3_wr_en = reg_write_en;      
-        4:   reg_t0_wr_en = reg_write_en;      
-        5:   reg_t1_wr_en = reg_write_en;         
-        6:   reg_ra_wr_en = reg_write_en;         
-        7:   reg_sp_wr_en = reg_write_en;         
-       default : ;                     
-     endcase    
+        0:    reg_en = 8'b00000001;    
+        1:    reg_en = 8'b00000010;    
+        2:    reg_en = 8'b00000100;    
+        3:    reg_en = 8'b00001000;     
+        4:    reg_en = 8'b00010000;     
+        5:    reg_en = 8'b00100000;        
+        6:    reg_en = 8'b01000000;        
+        7:    reg_en = 8'b10000000;                           
+     endcase
+     if (reg_write_en == 0) begin
+        reg_en = 0;
+     end
    end
     
    //output1 selection  
@@ -117,7 +131,7 @@ module register_file(
     end      
      
      //output2 selection  
-     always @(read_reg2,reg_s0, reg_s1,reg_s2, reg_s3, reg_t0, reg_t1, reg_ra, reg_sp) begin
+     always @(ldst_en, read_reg2,reg_s0, reg_s1,reg_s2, reg_s3, reg_t0, reg_t1, reg_ra, reg_sp) begin
         case (read_reg2)                      
             0:   reg2_out = reg_s0;          
             1:   reg2_out = reg_s1;          
@@ -128,7 +142,10 @@ module register_file(
             6:   reg2_out = reg_ra;             
             7:   reg2_out = reg_sp;             
             default : reg2_out = 10'd0 ;                       
-        endcase                                           
+        endcase 
+        if (ldst_en == 1)begin
+            reg2_out = read_reg2;
+        end                                          
       end            
  
 endmodule
