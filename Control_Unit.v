@@ -10,13 +10,9 @@ module Control_Unit(
     input [9:0] instr, 
     output reg done, 
     output reg [1:0] writeval_op,
-    output reg [9:0] imm_val,
     output reg [1:0] fetch_op, 
     output reg [1:0] alu_op, 
-    output reg wr_en, 
-    output reg [9:0] jmp_addr, 
-    output reg [2:0] read_reg1, 
-    output reg [2:0] read_reg2, 
+    output reg wr_en,
     output reg [2:0] wr_reg,
     output reg [1:0] ldst_en,
     output reg jump_control);
@@ -33,30 +29,28 @@ module Control_Unit(
         fetch_op = 2'd0;
         alu_op = 2'b00;
         jump_control = 0;
+        wr_reg = 3'd4;
         
         case(instr[9:8])
         
         0: begin
+                wr_reg = 3'd4;
               case (instr[7:6])
                 0: begin 
-                    wr_reg = 3'd4; 
                     alu_op = 2'd0;
                     wr_en = 1;
                    end
                 1: begin 
-                    wr_reg = 3'd4; 
                     alu_op = 2'd1;
                     wr_en = 1;
                    end
                 2: begin 
-                    wr_reg = 3'd4; 
                     alu_op = 2'd2;
-                    wr_en = 1;
+                    wr_en = 0;
                    end
                 3: begin 
-                    wr_reg = 3'd4; 
                     alu_op = 2'd3;
-                    wr_en = 1;
+                    wr_en = 0;
                    end
                endcase
            end
@@ -83,7 +77,6 @@ module Control_Unit(
         
         2: begin 
             writeval_op = 2'b10;
-            imm_val = {instr[7], instr[7], instr[7:0]};
             wr_reg = 3'd5;
             wr_en = 1;
            end
@@ -91,10 +84,10 @@ module Control_Unit(
         3: begin
             case (instr[7:6])
                 0: begin fetch_op = 3'd1; jump_control = 1; end
-                1: fetch_op = 3'd1;
+                1: fetch_op = 2'd1;
                 2: begin 
                     jump_control = 1;
-                    fetch_op = 3'd1;
+                    fetch_op = 2'd1;
                     wr_reg = 3'd6; //$ra
                     wr_en = 1;
                     writeval_op = 2'b01;
@@ -113,12 +106,7 @@ module Control_Unit(
                   end
         endcase
         end
-        
-        always @(instr) begin
-        read_reg1 = instr[5:3];
-        read_reg2 = instr[2:0];
-        jmp_addr = {instr[5], instr[5], instr[5], instr[5], instr[5:0]};
-        end
+
                 
 
         

@@ -16,7 +16,6 @@ module register_file(
     input ldst_en,
     output reg [9:0] reg1_out,  //read data1
     output reg [9:0] reg2_out,   //read data2
-    output reg [9:0] t0out,     //t0output
     output reg [9:0] ra_out,      //return address
     output reg [9:0] t1out      //t1out
     );
@@ -27,7 +26,6 @@ module register_file(
     initial begin
         reg1_out = 0;
         reg2_out = 0;
-        t0out  = 0;
         ra_out  = 0;
         t1out = 0;
     end
@@ -89,8 +87,7 @@ module register_file(
     .wen(reg_en[7]),
     .q(reg_sp));    
     
-    always @(reg_t0,reg_ra, reg_t1) begin  //outputs the value of t0 reg
-        t0out = reg_t0;
+    always @(reg_ra, reg_t1) begin
         ra_out = reg_ra;
         t1out = reg_t1;
     end   
